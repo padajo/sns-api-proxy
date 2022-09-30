@@ -1,0 +1,78 @@
+# This is the SAM template that represents the architecture of your serverless application
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-template-basics.html
+
+# The AWSTemplateFormatVersion identifies the capabilities of the template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/format-version-structure.html
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  sns-proxy
+
+  An SNS proxy that receives data from an SNS (request) topic, does an HTTP call to an external test API and then returns 
+  it to the original sender via a second (response) topic specified in the original message.
+
+# Transform section specifies one or more macros that AWS CloudFormation uses to process your template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-section-structure.html
+Transform:
+- AWS::Serverless-2016-10-31
+
+# Resources declares the AWS resources that you want to include in the stack
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
+Resources:
+  # This is an SNS Topic with all default configuration properties. To learn more about the available options, see
+  # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-sns-topic.html
+
+  # create one the users make the request to
+  TestApiProxyRequestTopic:
+    Type: AWS::SNS::Topic
+
+  # and one that users get the response back from
+  # they must be subscribed to it (of course) for this to work
+  TestApiProxyResponseTopic:
+    Type: AWS::SNS::Topic
+
+  # This is the Lambda function definition associated with the source code: sns-payload-logger.js. For all available properties, see
+  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  # SNSTestApiProxy:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     Description: A Lambda function that recieves a request from SNS to access an API and returns the response given the correct data.
+  #     Runtime: nodejs16.x
+  #     Architectures:
+  #       - arm64
+  #     Handler: src/handlers/snsApiProxy.handler
+  #     Environment:
+  #       Variables:
+  #         TOPIC_REQUEST_NAME: !GetAtt TestApiProxyRequestTopic.TopicName
+  #         TOPIC_REQUEST_ARN: !GetAtt TestApiProxyRequestTopic.TopicArn
+  #         TOPIC_RESPONSE_NAME: !GetAtt TestApiProxyResponseTopic.TopicName
+  #         TOPIC_RESPONSE_ARN: !GetAtt TestApiProxyResponseTopic.TopicArn
+  #     # This property associates this Lambda function with the SNS topic defined above, so that whenever the topic
+  #     # receives a message, the Lambda function is invoked
+  #     Events:
+  #       SNSAPIRequestTopicEvent:
+  #         Type: SNS
+  #         Properties:
+  #           Topic: !Ref TestApiProxyRequestTopic
+  #     MemorySize: 256
+  #     Timeout: 10 # or however long the API is going to take - note that API Gateway has a maximum timeout of 30 seconds
+  #     Policies:
+  #       # This is the basic execution permission
+  #       - AWSLambdaBasicExecutionRole
+  #       - SNSPublishMessagePolicy:
+  #         TopicName: !GetAtt TestApiProxyResponseTopic.TopicName # the function needs to be able to send a response back
+  #       - SNSPublishMessagePolicy:
+  #         TopicName: "**" # the function needed for error messages
+
+Outputs:
+  RequestTopicArn:
+    Description: SNS API Proxy Request Topic ARN
+    Value: !GetAtt TestApiProxyRequestTopic.TopicArn
+  RequestTopicName:
+    Description: SNS API Proxy Request Topic Name
+    Value: !GetAtt TestApiProxyRequestTopic.TopicName
+  ResponeTopicArn:
+    Description: SNS API Proxy Request Topic ARN
+    Value: !GetAtt TestApiProxyResponseTopic.TopicArn
+  ResponseTopicName:
+    Description: SNS API Proxy Request Topic Name
+    Value: !GetAtt TestApiProxyResponseTopic.TopicName

@@ -1,0 +1,10 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "sns-api-proxy"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-jpyxyn9y81z4"
+s3_prefix = "sns-api-proxy"
+region = "eu-west-1"
+capabilities = "CAPABILITY_IAM"
+image_repositories = []
